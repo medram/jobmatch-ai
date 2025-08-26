@@ -68,23 +68,33 @@ def main():
             type=["pdf", "docx"],
         )
 
+        st.button(
+            "Click me", on_click=lambda: st.write("job_description:", job_description)
+        )
+
     # Section principale
     if openai_api_key and job_description and uploaded_cvs:
 
         # Fonction pour extraire le texte d'un fichier
         def extract_text_from_file(file_path, file_type):
-            # try:
-            #     if file_type == "pdf":
-            #         reader = PdfReader(file_path)
-            #         return " ".join([page.extract_text() for page in reader.pages if page.extract_text()])
+            try:
+                if file_type == "pdf":
+                    reader = PdfReader(file_path)
+                    return " ".join(
+                        [
+                            page.extract_text()
+                            for page in reader.pages
+                            if page.extract_text()
+                        ]
+                    )
 
-            #     elif file_type == "docx":
-            #         doc = Document(file_path)
-            #         return " ".join([para.text for para in doc.paragraphs if para.text])
+                elif file_type == "docx":
+                    doc = Document(file_path)
+                    return " ".join([para.text for para in doc.paragraphs if para.text])
 
-            # except Exception as e:
-            #     st.error(f"Erreur lecture {file_path}: {e}")
-            #     return ""
+            except Exception as e:
+                st.error(f"Erreur lecture {file_path}: {e}")
+                return ""
             pass
 
         # Traitement des CVs
