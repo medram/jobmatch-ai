@@ -68,10 +68,6 @@ def main():
             type=["pdf", "docx"],
         )
 
-        st.button(
-            "Click me", on_click=lambda: st.write("job_description:", job_description)
-        )
-
     # Section principale
     if openai_api_key and job_description and uploaded_cvs:
 
@@ -98,89 +94,89 @@ def main():
             pass
 
         # Traitement des CVs
-        # if st.button("🚀 Analyser les CVs", type="primary"):
+        if st.button("🚀 Analyser les CVs"):
 
-        #     results = []
+            results = []
 
-        #     with st.spinner("📊 Analyse des CVs en cours..."):
+            with st.spinner("📊 Analyse des CVs en cours..."):
 
-        #         for uploaded_file in uploaded_cvs:
-        #             try:
-        #                 # Sauvegarder temporairement le fichier
-        #                 with tempfile.NamedTemporaryFile(
-        #                     delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
-        #                 ) as tmp_file:
-        #                     tmp_file.write(uploaded_file.read())
-        #                     tmp_path = tmp_file.name
+                for uploaded_file in uploaded_cvs:
+                    try:
+                        # Sauvegarder temporairement le fichier
+                        with tempfile.NamedTemporaryFile(
+                            delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
+                        ) as tmp_file:
+                            tmp_file.write(uploaded_file.read())
+                            tmp_path = tmp_file.name
 
-        #                 # Déterminer le type de fichier
-        #                 file_type = (
-        #                     "pdf" if uploaded_file.type == "application/pdf" else "docx"
-        #                 )
+                        # Déterminer le type de fichier
+                        file_type = (
+                            "pdf" if uploaded_file.type == "application/pdf" else "docx"
+                        )
 
-        #                 # Extraire le texte
-        #                 cv_text = extract_text_from_file(tmp_path, file_type)
+                        # Extraire le texte
+                        cv_text = extract_text_from_file(tmp_path, file_type)
 
-        #                 if cv_text:
-        #                     # Simulation d'évaluation (à remplacer par OpenAI)
-        #                     score = len(cv_text) % 100  # Simulation simple
-        #                     match_percent = min(score + 20, 100)  # Simulation
+                        if cv_text:
+                            # Simulation d'évaluation (à remplacer par OpenAI)
+                            score = len(cv_text) % 100  # Simulation simple
+                            match_percent = min(score + 20, 100)  # Simulation
 
-        #                     results.append(
-        #                         {
-        #                             "Fichier": uploaded_file.name,
-        #                             "Score": score,
-        #                             "Match %": match_percent,
-        #                             "Points forts": (
-        #                                 "Expérience pertinente"
-        #                                 if score > 50
-        #                                 else "Compétences de base"
-        #                             ),
-        #                             "Points faibles": (
-        #                                 "Manque d'expérience"
-        #                                 if score <= 50
-        #                                 else "Peu d'infos"
-        #                             ),
-        #                         }
-        #                     )
+                            results.append(
+                                {
+                                    "Fichier": uploaded_file.name,
+                                    "Score": score,
+                                    "Match %": match_percent,
+                                    "Points forts": (
+                                        "Expérience pertinente"
+                                        if score > 50
+                                        else "Compétences de base"
+                                    ),
+                                    "Points faibles": (
+                                        "Manque d'expérience"
+                                        if score <= 50
+                                        else "Peu d'infos"
+                                    ),
+                                }
+                            )
 
-        #                 # Nettoyer le fichier temporaire
-        #                 os.unlink(tmp_path)
+                        # Nettoyer le fichier temporaire
+                        os.unlink(tmp_path)
 
-        #             except Exception as e:
-        #                 st.error(f"Erreur avec {uploaded_file.name}: {e}")
+                    except Exception as e:
+                        st.error(f"Erreur avec {uploaded_file.name}: {e}")
 
-        #     if results:
-        #         # Créer et afficher le tableau de résultats
-        #         results_df = pd.DataFrame(results).sort_values("Score", ascending=False)
+            if results:
+                # Créer et afficher le tableau de résultats
+                results_df = pd.DataFrame(results).sort_values("Score", ascending=False)
 
-        #         st.subheader("🎯 Résultats de l'analyse")
-        #         st.dataframe(results_df, use_container_width=True)
+                st.subheader("🎯 Résultats de l'analyse")
+                st.dataframe(results_df, use_container_width=True)
 
-        #         # Métriques
-        #         col1, col2, col3 = st.columns(3)
-        #         with col1:
-        #             st.metric("📊 Score moyen", f"{results_df['Score'].mean():.1f}/100")
-        #         with col2:
-        #             st.metric("⭐ Meilleur score", f"{results_df['Score'].max()}/100")
-        #         with col3:
-        #             st.metric("📋 CVs analysés", len(results_df))
+                # Métriques
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("📊 Score moyen", f"{results_df['Score'].mean():.1f}/100")
+                with col2:
+                    st.metric("⭐ Meilleur score", f"{results_df['Score'].max()}/100")
+                with col3:
+                    st.metric("📋 CVs analysés", len(results_df))
 
-        #         # Graphique
-        #         st.subheader("📈 Performance des CVs")
-        #         st.bar_chart(results_df.set_index("Fichier")["Score"])
+                # Graphique
+                st.subheader("📈 Performance des CVs")
+                st.bar_chart(results_df.set_index("Fichier")["Score"])
 
-        #         # Téléchargement des résultats
-        #         csv = results_df.to_csv(index=False).encode("utf-8")
-        #         st.download_button(
-        #             "💾 Télécharger les résultats (CSV)",
-        #             csv,
-        #             "resultats_analyse_cvs.csv",
-        #             "text/csv",
-        #             key="download-csv",
-        #         )
-        #     else:
-        #         st.warning("❌ Aucun CV n'a pu être analysé")
+                # Téléchargement des résultats
+                csv = results_df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    "💾 Télécharger les résultats (CSV)",
+                    csv,
+                    "resultats_analyse_cvs.csv",
+                    "text/csv",
+                    key="download-csv",
+                )
+            else:
+                st.warning("❌ Aucun CV n'a pu être analysé")
 
     else:
         # Message d'instructions
