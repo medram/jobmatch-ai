@@ -6,30 +6,30 @@ import streamlit as st
 from docx import Document
 from PyPDF2 import PdfReader
 
-# Configuration de la page
+# Page configuration
 st.set_page_config(page_title="CV Sorter", layout="wide")
 
 
 def main():
-    st.title("📄 Système Intelligent de Tri de CVs")
+    st.title("📄 Intelligent CV Sorting System")
 
-    # Barre latérale pour les paramètres
+    # Sidebar for settings
     with st.sidebar:
         st.header("Configuration")
 
-        # Clé API OpenAI
-        openai_api_key = st.text_input("Clé API OpenAI", type="password")
+        # OpenAI API Key
+        openai_api_key = st.text_input("OpenAI API Key", type="password")
 
-        # Description du poste
+        # Job description
         job_description = st.text_area(
-            "Description du poste",
+            "Job Description",
             height=200,
-            placeholder="Coller la description du poste ici...",
+            placeholder="Paste the job description here...",
         )
 
-        # Upload de fichier de description
+        # Job description file upload
         uploaded_jd_file = st.file_uploader(
-            "Ou uploader une description de poste", type=["txt", "pdf", "docx"]
+            "Or upload a job description", type=["txt", "pdf", "docx"]
         )
 
         if uploaded_jd_file:
@@ -56,22 +56,22 @@ def main():
                 else:
                     job_description = str(uploaded_jd_file.read(), "utf-8")
 
-                st.success("Description de poste chargée avec succès!")
+                st.success("Job description loaded successfully!")
 
             except Exception as e:
-                st.error(f"Erreur lors de la lecture du fichier: {e}")
+                st.error(f"Error reading file: {e}")
 
-        # Upload des CVs
+        # CV uploads
         uploaded_cvs = st.file_uploader(
-            "Uploader les CVs (PDF/DOCX)",
+            "Upload CVs (PDF/DOCX)",
             accept_multiple_files=True,
             type=["pdf", "docx"],
         )
 
-    # Section principale
+    # Main section
     if openai_api_key and job_description and uploaded_cvs:
 
-        # Fonction pour extraire le texte d'un fichier
+        # Function to extract text from a file
         def extract_text_from_file(file_path, file_type):
             try:
                 if file_type == "pdf":
@@ -89,115 +89,117 @@ def main():
                     return " ".join([para.text for para in doc.paragraphs if para.text])
 
             except Exception as e:
-                st.error(f"Erreur lecture {file_path}: {e}")
+                st.error(f"Error reading {file_path}: {e}")
                 return ""
             pass
 
-        # Traitement des CVs
-        if st.button("🚀 Analyser les CVs"):
+        # CV processing
+        if st.button("🚀 Analyze CVs"):
 
             results = []
 
-            with st.spinner("📊 Analyse des CVs en cours..."):
+            with st.spinner("📊 Analyzing CVs in progress..."):
 
                 for uploaded_file in uploaded_cvs:
                     try:
-                        # Sauvegarder temporairement le fichier
+                        # Temporarily save the file
                         with tempfile.NamedTemporaryFile(
                             delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
                         ) as tmp_file:
                             tmp_file.write(uploaded_file.read())
                             tmp_path = tmp_file.name
 
-                        # Déterminer le type de fichier
+                        # Determine file type
                         file_type = (
                             "pdf" if uploaded_file.type == "application/pdf" else "docx"
                         )
 
-                        # Extraire le texte
+                        # Extract text
                         cv_text = extract_text_from_file(tmp_path, file_type)
 
                         if cv_text:
-                            # Simulation d'évaluation (à remplacer par OpenAI)
-                            score = len(cv_text) % 100  # Simulation simple
+                            # Evaluation simulation (to be replaced by OpenAI)
+                            score = len(cv_text) % 100  # Simple simulation
                             match_percent = min(score + 20, 100)  # Simulation
 
                             results.append(
                                 {
-                                    "Fichier": uploaded_file.name,
+                                    "File": uploaded_file.name,
                                     "Score": score,
                                     "Match %": match_percent,
-                                    "Points forts": (
-                                        "Expérience pertinente"
+                                    "Strengths": (
+                                        "Relevant experience"
                                         if score > 50
-                                        else "Compétences de base"
+                                        else "Basic skills"
                                     ),
-                                    "Points faibles": (
-                                        "Manque d'expérience"
+                                    "Weaknesses": (
+                                        "Lack of experience"
                                         if score <= 50
-                                        else "Peu d'infos"
+                                        else "Limited info"
                                     ),
                                 }
                             )
 
-                        # Nettoyer le fichier temporaire
+                        # Clean up temporary file
                         os.unlink(tmp_path)
 
                     except Exception as e:
-                        st.error(f"Erreur avec {uploaded_file.name}: {e}")
+                        st.error(f"Error with {uploaded_file.name}: {e}")
 
             if results:
-                # Créer et afficher le tableau de résultats
+                # Create and display results table
                 results_df = pd.DataFrame(results).sort_values("Score", ascending=False)
 
-                st.subheader("🎯 Résultats de l'analyse")
+                st.subheader("🎯 Analysis Results")
                 st.dataframe(results_df, use_container_width=True)
 
-                # Métriques
+                # Metrics
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("📊 Score moyen", f"{results_df['Score'].mean():.1f}/100")
+                    st.metric(
+                        "📊 Average Score", f"{results_df['Score'].mean():.1f}/100"
+                    )
                 with col2:
-                    st.metric("⭐ Meilleur score", f"{results_df['Score'].max()}/100")
+                    st.metric("⭐ Best Score", f"{results_df['Score'].max()}/100")
                 with col3:
-                    st.metric("📋 CVs analysés", len(results_df))
+                    st.metric("📋 CVs Analyzed", len(results_df))
 
-                # Graphique
-                st.subheader("📈 Performance des CVs")
-                st.bar_chart(results_df.set_index("Fichier")["Score"])
+                # Chart
+                st.subheader("📈 CV Performance")
+                st.bar_chart(results_df.set_index("File")["Score"])
 
-                # Téléchargement des résultats
+                # Download results
                 csv = results_df.to_csv(index=False).encode("utf-8")
                 st.download_button(
-                    "💾 Télécharger les résultats (CSV)",
+                    "💾 Download Results (CSV)",
                     csv,
-                    "resultats_analyse_cvs.csv",
+                    "cv_analysis_results.csv",
                     "text/csv",
                     key="download-csv",
                 )
             else:
-                st.warning("❌ Aucun CV n'a pu être analysé")
+                st.warning("❌ No CVs could be analyzed")
 
     else:
-        # Message d'instructions
+        # Instructions message
         st.info(
             """
         ## 📋 Instructions
-        1. Entrez votre clé API OpenAI
-        2. Saisissez ou uploader une description de poste
-        3. Uploader les CVs à analyser (PDF ou DOCX)
-        4. Cliquez sur 'Analyser les CVs'
+        1. Enter your OpenAI API key
+        2. Enter or upload a job description
+        3. Upload CVs to analyze (PDF or DOCX)
+        4. Click 'Analyze CVs'
         """
         )
 
         if not openai_api_key:
-            st.warning("🔑 Clé API OpenAI requise")
+            st.warning("🔑 OpenAI API key required")
         if not job_description:
-            st.warning("📝 Description de poste requise")
+            st.warning("📝 Job description required")
         if not uploaded_cvs:
-            st.warning("📄 CVs à analyser requis")
+            st.warning("📄 CVs to analyze required")
 
 
-# Point d'entrée
+# Entry point
 if __name__ == "__main__":
     main()
